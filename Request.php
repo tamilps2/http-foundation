@@ -284,6 +284,18 @@ class Request
         ) {
             parse_str($request->getContent(), $data);
             $request->request = new ParameterBag($data);
+
+        } else if (0 === strpos($request->headers->get('CONTENT_TYPE'), 'application/json')
+            && in_array(
+                strtoupper($request->server->get('REQUEST_METHOD', 'GET')),
+                array('PUT', 'DELETE', 'PATCH', 'POST'))
+        ) {
+            $data = $request->getContent();
+            if ($decoded = json_decode($data, true)) {
+                $request->request = new ParameterBag($decoded);
+            } else {
+                $request->request = new ParameterBag(is_array($data)?$data:[$data]);
+            }
         }
 
         return $request;
